@@ -2,17 +2,17 @@
 
 
 void get_header(WAD_t* wad_data, FILE* wad_file) {
+    
     // .identification
     fread(wad_data->header.wad_type, 4, 1, wad_file);
     wad_data->header.wad_type[4] = '\0';
-    printf("{\"wad_type\": \"%s\", ", wad_data->header.wad_type);
-
     // .numlumps
     fread(&wad_data->header.num_lumps, 4, 1, wad_file);
-    printf("\"numlumps\": %d, ", wad_data->header.num_lumps);
-
     // .infotableofs
     fread(&wad_data->header.offset, 4, 1, wad_file);
+
+    printf("{\"wad_type\": \"%s\", ", wad_data->header.wad_type);
+    printf("\"numlumps\": %d, ", wad_data->header.num_lumps);
     printf("\"offset\": %d}\n", wad_data->header.offset);
     
     rewind(wad_file);
@@ -23,8 +23,10 @@ void get_lumps(WAD_t* wad_data, FILE* wad_file) {
     // Store each lump
     wad_data->lumps = (lump_t*)malloc(wad_data->header.num_lumps * sizeof(lump_t));
 
+    // *I hate Windows*
+    // This bit of code was meant to help me debug but instead it's become the bane of my existence
+    // Windows won't let me write to a file like this, no clue how to fix it
     FILE* out = fopen("C:/Users/Nan/Documents/wad_wad/lump_dump.txt", "w");
-    perror(out);
     fseek(wad_file, wad_data->header.offset, SEEK_SET);
     for (int i = 0; i < wad_data->header.num_lumps; i++) {
         wad_data->lumps[i].offset = 0;
@@ -37,11 +39,13 @@ void get_lumps(WAD_t* wad_data, FILE* wad_file) {
 
         fprintf(out, "%d: { \"offset\": %d, \"size\": %d, \"name\": \"%s\" }\n", i, wad_data->lumps[i].offset, wad_data->lumps[i].size, wad_data->lumps[i].name);
     }
+
     fclose(out);
     rewind(wad_file);
 }
 
 int get_lump_index_by_name(WAD_t* wad_data, const char* lump_name) {
+    // Return -1 in case you want to check if the lump even exists
     for (int i = 0; i < wad_data->header.num_lumps; i++) {
         if (strcmp(wad_data->lumps[i].name, lump_name) == 0) return i;
     }
@@ -49,12 +53,23 @@ int get_lump_index_by_name(WAD_t* wad_data, const char* lump_name) {
 }
 
 lump_t get_lump_by_index(WAD_t* wad_data, int index) {
+    // Lazy function, not error proof
+    // TODO: Re-do this properly?
     return wad_data->lumps[index];
 }
 
 level_t get_level(WAD_t* wad_data, FILE* wad_file, const char* level_name) {
     int map_index = get_lump_index_by_name(wad_data, level_name);
     level_t map;
+    // Don't look too much into this, please.
+    map.linedefs = NULL;
+    map.nodes = NULL;
+    map.sectors = NULL;
+    map.segments = NULL;
+    map.sidedefs = NULL;
+    map.ssectors = NULL;
+    map.things = NULL;
+    map.vertexes = NULL;
 
     if (map_index == -1) return map;
     lump_t lump;
@@ -80,6 +95,8 @@ level_t get_level(WAD_t* wad_data, FILE* wad_file, const char* level_name) {
     return map;
 }
 
+// There's very likely a way to combine all these into a single, elegant function
+// It's a bit of a monstrosity as it is, but it works
 void map_get_things(level_t* level, lump_t* lump, FILE* wad_file) {
     int count = lump->size / sizeof(mapthings_t);
     level->things = (mapthings_t*)malloc(count * sizeof(mapthings_t));
