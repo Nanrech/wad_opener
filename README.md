@@ -5,4 +5,4 @@ Don't look at this it's not done yet :3
 (if you do look at this, read main.c)
 
 win:
-`gcc src\main.c src\functions.c -I.\include -o main | .\main.exe`
+`gcc src\main.c src\functions.c -I.\include -o main | .\main.exe filename.wad`
