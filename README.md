@@ -1,8 +1,7 @@
 # wad_opener
-Dump of a silly little project I started some time ago bc I wanted to see how DOOM's WAD format worked
+Silly little project that hasn't gone anywhere yet
 
-Don't look at this :3
-(if you do look at this, read main.c)
-
-win:
-`gcc src\main.c src\functions.c -I.\include -o main | .\main.exe filename.wad`
+References:
+- https://doomwiki.org/wiki/WAD
+- https://github.com/id-Software/DOOM
+- :3
